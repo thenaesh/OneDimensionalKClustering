@@ -129,7 +129,7 @@ void VillageInfo::constructDPTable()
 			Z[s][v] = Z[s][v-1] + abs(villagePositions[v] - villagePositions[s]);
 	}
 
-
+	// construct D
 	for (int n = 1; n <= this->V; n++)
 	{
 		D[n][1] = getZ(n, n);
@@ -169,12 +169,22 @@ int VillageInfo::getZ(int n, int m)
 	int endV = n;
 	if (startV > endV) return 0; // zero is the most sensible return value in this case
 
-	int minDistance = INF; // initially large min distance
-	for (int stnPos = startV; stnPos <= endV; stnPos++)
+	int minDistance = INF;
+	if (startV == 1)
 	{
-		int dist = 0;
-		for (int v = startV; v <= endV; v++) dist += abs(villagePositions[v] - villagePositions[stnPos]);
-		minDistance = (dist < minDistance) ? dist : minDistance; // update the min distance for each stnPos
+		for (int s = startV; s <= endV; s++)
+		{
+			int candidate = Z[s][endV];
+			minDistance = (candidate < minDistance) ? candidate : minDistance;
+		}
+	}
+	else
+	{
+		for (int s = startV; s <= endV; s++)
+		{
+			int candidate = Z[s][endV] - Z[s][startV - 1];
+			minDistance = (candidate < minDistance) ? candidate : minDistance;
+		}
 	}
 
 	return minDistance;
