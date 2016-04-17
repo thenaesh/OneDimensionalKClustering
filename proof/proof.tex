@@ -1,6 +1,6 @@
-\documentclass[]{article}
-
+\documentclass[twocolumn]{article}
 \usepackage{amsfonts}
+\usepackage{amsmath}
 
 %opening
 \title{Optimally Placing Police Stations}
@@ -13,7 +13,7 @@
 	
 	\section{Introduction}
 		\paragraph{}
-		We present an algorithm to compute the most efficient placement of $P$ police stations among $V$ villages such that the sum of distances from each village to its nearest police station is minimal. The villages are all situated in a line, making this problem equivalent to the k-clustering problem in one-dimensional Euclidean space.
+		We present a  algorithm to compute, by dynamic programming, the most efficient placement of $P$ police stations among $V$ villages such that the sum of distances from each village to its nearest police station is minimal. The villages are all situated in a line, making this problem equivalent to the k-clustering problem in one-dimensional Euclidean space.
 		
 		\paragraph{Definitions}
 		\begin{itemize}
@@ -28,24 +28,70 @@
 		Read in the number of villages $V$ and the number of police stations $P$ to place among the villages. Read the village position array, $A$.
 		
 		\paragraph{Step 2}
-		Compute a matrix, $D'$, such that $(D')_{s, n}$ is the total distance of the first $n$ villages in the list to the village at index $s$ (this simulates a single police station being placed at village $s$).
+		Compute a matrix, $D'$, such that $(D')_{s, n}$ is the total distance of the first $n$ villages in the list to a single police station at index $s$. This may be done recursively for each $s$ by taking $(D')_{s, 1} = | (A)_s - (A)_1 |$ and $(D')_{s, n} = (D')_{s, n-1} + | (A)_s - (A)_n |$.
 		
 		\paragraph{Convenience Functions}
 		\begin{itemize}
-			\item Define a function $d(s, a, b) = (D')_{s, b} - (D')_{s, a}$. This is the sum of distances of each of the villages at index $a+1$ to $b$ to the police station at index $s$.
-			\item Define another function $z(n, m) = min_{n-m < s <= n}{d(s, m-n, n)}$. This is the optimal solution for placing a single police station among the last $m$ of the first $n$ villages (i.e. villages indexed $n-m+1$ to $n$).
+			\item Define a function $d(s, a, b) = (D')_{s, b} - (D')_{s, a}$. This is the sum of distances of each of the villages at index $a+1$ to $b$ to the police station at index $s$. This can be seen from the fact that we simply subtract the sum of distances of each of the first $a$ villages from $s$ from the sum of distances of each of the first $b$ villages from $s$, yielding the sum of distances of each of the remaining villages ($a+1$ to $b$) from $s$.
+			\item Define another function $z(n, m) = min_{n-m < s <= n}{d(s, m-n, n)}$. This is clearly the optimal solution for placing a single police station among the last $m$ of the first $n$ villages (i.e. villages indexed $n-m+1$ to $n$), as it involves taking the minimal distance yielded by all the possible placements of the police station among the villages.
 		\end{itemize}
 		
 		\paragraph{Step 3}
-		Compute a matrix, $D$, where $(D)_{n, k}$ represents the optimal solution for placing $k$ police stations among the first $n$ villages. Perform the computation from the bottom up, by first defining $(D)_{n, 1} = z(n, n) \forall n \in [1..V]$ and performing the computation iteratively for each $k$ starting at $2$ and increasing until $P$, following the rule $(D)_{n, k} = min_{0 <= m < n}{D(n-m, k-1) + z(n, m)}$.
+		Compute a matrix, $D$, using dynamic programming. Perform the computation from the bottom up, by first defining $(D)_{n, 1} = z(n, n) \forall n \in [1..V]$ and performing the computation iteratively for each $k$ starting at $2$ and increasing until $P$, following the rule $(D)_{n, k} = min_{0 <= m < n}{D(n-m, k-1) + z(n, m)}$. \textbf{We claim that each $(D)_{n, k}$ represents the optimal solution for placing $k$ police stations among the first $n$ villages.} That claim, once proven, will show that the recurrence used is valid. It will also show the optimal substructure and overlapping subproblems inherent in the computation of $(D)_{n, k}$.
 		
 		\paragraph{Step 4}
 		Output $(D)_{V, P}$. This is the optimal solution to the placement of $P$ police stations among $V$ villages, and is what we originally sought to find.
 			
 	
 	\section{Correctness Proof}
+		\paragraph{}
+		The proof boils down to showing that the claim made in \textbf{Step 3} (that each $(D)_{n, k}$ represents the optimal solution for placing $k$ police stations among the first $n$ villages) is true.
+		
+		\paragraph{}
+		The proof is by induction on the number of police stations placed, $k$. Let $P_k$ denote the statement that $(D)_{n, k}$ represents the optimal solution for placing $k$ police stations among the first $n$ villages.
+		
+		\paragraph{}
+		We know that $(D)_{n, 1} = z(n, n) \forall n \in [1..V]$. But $z(n, n)$ is the optimal solution for placing $1$ police station among the first $n$ villages. Therefore, $P_1$ is true.
+		
+		\paragraph{}
+		Suppose, for all $k' < k$, that $P_{k'}$ is true. Let $S = \{D(n-m) + z(n, m) : 0 <= m < n\}$. We want to show that the optimal solution to placing $k$ stations among the first $n$ villages is exactly $\min S$, which would then show that $(D)_{n, k} = \min S$ is indeed the optimal solution.
+		
+		\paragraph{}
+		We know that every village has at least one closest police station. We define the reporting station of a village to be the \underline{closest station with the highest index}. In the event that a village has a unique closest station, that station is its reporting station.
+		
+		\paragraph{}
+		Clearly, every village has a unique reporting station. We may partition the first $n$ villages into two distinct groups: those that report to one of the first $k-1$ stations and those that report to the final station. Therefore $\exists m$, $0 <= m < n$, such that the first $n-m$ villages report to one of the first $k-1$ stations and the next $m$ villages report to the last station. Due to the nature of the partition, the placement of stations in either group may be chosen independently of the other. Finding the optimal placement of $k$ stations among the first $n$ villages thus boils down to finding the optimal placement of stations in both groups, separately. The optimal substructure property is thus present, and $(D)_{n, k} = (D)_{n - m, k-1} + z(n, m)$ for this particular $m$.
+		
+		\paragraph{}
+		At this point, it is clear that $(D)_{n, k} \in S$. It remains to show that $(D)_{n, k}$ is the minimal element in $S$. It suffices to show that $\forall x \in S$, $(D)_{n, k} <= x$. But we note that $S$ is a set where every element is a solution to some placement of $k$ stations among the first $n$ villages. For $(D)_{n, k}$ to be the optimal solution in this regard, it is necessary that $\forall x \in S$, $(D)_{n, k} <= x$. This, together with the previously proved assertion that $(D)_{n, k} \in S$, proves the statement $(D)_{n, k} = \min S$. It immediately follows that $(D)_{n, k}$, as computed, is indeed the optimal solution. Therefore, $P_k$ is true given that for all $k' < k$, $P_{k'}$ is true.
+		
+		\paragraph{}
+		As $P_1$ is true and $\forall k' < k (P_{k'}) \implies P_k$, we conclude by induction that $P_n$ is true for all positive integers $n$. In particular, $P_V$ is true, so the value $(D)_{V, P}$ that we return in \textbf{Step 4} is indeed the optimal solution that we seek.
+		
+		\paragraph{QED}
+		
 	
 	\section{Complexity Analysis}
+		\paragraph{}
+		\textbf{Step 1} is done in $\Theta(V)$ as it involves merely reading the list of villages.
+		
+		\paragraph{}
+		In \textbf{Step 2}, we note that $D'$ is a $V$ by $V$ matrix. Computing each row of $D'$ takes $\Theta(V)$ following the recursive procedure outlined, as computation of each element involves a single subtraction and absolute value operation. Thus, computation of the whole $D'$ takes $\Theta(V^2)$.
+		
+		\paragraph{}
+		With $D'$ constructed, the convenience function $d(s, a b)$ involves a simple subtraction and runs in $\Theta(1)$. As $z(n, m)$ involves running $d$ $m$ times and $0 < m < n < V$, $z(n, m)$ runs in $\Theta(V)$.
+		
+		\paragraph{}
+		Computing each of the $(D)_{n, 1}$ therefore takes $\Theta(V)$. Computing each of the other elements according to the recurrence earlier specified involves a $n$ memory accesses ($\Theta(V)$, as $n <= V$), $n$ calls to $z$ (likewise $\Theta(V^2)$), $n$ additions ($\Theta(V)$), costing a total of $\Theta(V^2)$. Computing an entire column, with $V$ elements, costs $\Theta(V^2)$ for the first column and $\Theta(V^3)$ for the others. As there are $P$ columns, the cost of building the entire matrix $D$ in \textbf{Step 3} is $\Theta(V^2) + \Theta(P V^3)$, which is still $\Theta(V^3)$.
+		
+		\paragraph{Time Complexity}
+		The time complexity of the entire algorithm is thus $\Theta(V^3)$, cubic in the number of villages, taking the number of police stations to be a constant.
+		
+		\paragraph{}
+		We see that storing the array $A$ in \textbf{Step 1} involves storing all the village positions, so $A$ uses $\Theta(V)$ space. $D'$, computed in \textbf{Step 2}, is a $V$ by $V$ matrix, so it occupies $\Theta(V^2)$ space. $D$, computed in \textbf{Step 3}, is a $V$ by $P$ matrix, and so uses $\Theta(V)$ space. All other operations maintain at most a constant amount of state (thus $\Theta(1)$ space), referencing only $A$, $D'$ and $D$ whenever necessary.
+		
+		\paragraph{Space Complexity}
+		The space complexity of the entire algorithm is thus $\Theta(V^2)$, quadratic in the number of villages, taking the number of police stations to be a constant.
 	
 	
 \end{document}
