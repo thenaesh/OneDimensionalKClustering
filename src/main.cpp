@@ -12,6 +12,7 @@ class VillageInfo
     int V; // number of villages
     int P; // number of police stations
     int* villagePositions;
+	int solution;
 
 public:
     VillageInfo();
@@ -27,10 +28,16 @@ private:
      * for k >= n, D[n][k] == 0
      */
     int** D;
+	/*
+	 * Z[s][v] stores the minimum distance of 1..v 
+	 * when placing a single station at s
+	 */
+	int** Z;
 
 private:
 	void initDPTable();
 	void constructDPTable();
+	void destroyDPTable();
 	/*
 	 * get the optimal solution for placing a single station
 	 * among villages (n - m + 1)..n
@@ -81,12 +88,16 @@ void VillageInfo::readInput()
 void VillageInfo::computeSolution()
 {
 	this->initDPTable();
+
 	this->constructDPTable();
+	this->solution = this->D[this->V][this->P];
+
+	this->destroyDPTable();
 }
 
 int VillageInfo::getSolution() const
 {
-	return this->D[this->V][this->P];
+	return this->solution;
 }
 
 
@@ -94,8 +105,12 @@ void VillageInfo::initDPTable()
 {
 	// allocate memory
 	this->D = new int*[this->V + 1];
+	this->Z = new int*[this->V + 1];
 	for (int n = 1; n <= this->V; n++)
+	{
 		this->D[n] = new int[this->P + 1];
+		this->Z[n] = new int[this->V + 1];
+	}
 	
 	// initialise values
 	for (int n = 1; n <= this->V; n++)
@@ -106,6 +121,15 @@ void VillageInfo::initDPTable()
 
 void VillageInfo::constructDPTable()
 {
+	// construct Z
+	for (int s = 1; s <= this->V; s++)
+	{
+		Z[s][1] = abs(villagePositions[1] - villagePositions[s]);
+		for (int v = 2; v <= this->V; v++)
+			Z[s][v] = Z[s][v-1] + abs(villagePositions[v] - villagePositions[s]);
+	}
+
+
 	for (int n = 1; n <= this->V; n++)
 	{
 		D[n][1] = getZ(n, n);
@@ -125,6 +149,17 @@ void VillageInfo::constructDPTable()
 		}
 	}
 	this->dbgPrint0();
+}
+
+void VillageInfo::destroyDPTable()
+{
+	for (int n = 1; n <= this->V; n++)
+	{
+		delete this->Z[n];
+		delete this->D[n];
+	}
+	delete Z;
+	delete D;
 }
 
 int VillageInfo::getZ(int n, int m)
