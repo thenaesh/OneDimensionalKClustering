@@ -1,0 +1,51 @@
+\documentclass[]{article}
+
+\usepackage{amsfonts}
+
+%opening
+\title{Optimally Placing Police Stations}
+\author{Thenaesh Elango (A0124772E)}
+
+\begin{document}
+	
+	
+	\maketitle
+	
+	\section{Introduction}
+		\paragraph{}
+		We present an algorithm to compute the most efficient placement of $P$ police stations among $V$ villages such that the sum of distances from each village to its nearest police station is minimal. The villages are all situated in a line, making this problem equivalent to the k-clustering problem in one-dimensional Euclidean space.
+		
+		\paragraph{Definitions}
+		\begin{itemize}
+			\item For any matrix $M$, $(M)_{i,j}$ denotes the element of $M$ at row $i$, column $j$.
+			\item For any (ordered) array $S$, $(S)_i$ denotes the element of $S$ with index $i$.
+			\item An \textbf{optimal solution to the placement of $k$ police stations among $n$ villages} refers to the minimal sum of distances from each of the $n$ villages to its nearest police station.
+		\end{itemize}
+		\underline{NOTE: All arrays are 1-indexed, not 0-indexed.}
+		
+	\section{Algorithm Description}
+		\paragraph{Step 1}
+		Read in the number of villages $V$ and the number of police stations $P$ to place among the villages. Read the village position array, $A$.
+		
+		\paragraph{Step 2}
+		Compute a matrix, $D'$, such that $(D')_{s, n}$ is the total distance of the first $n$ villages in the list to the village at index $s$ (this simulates a single police station being placed at village $s$).
+		
+		\paragraph{Convenience Functions}
+		\begin{itemize}
+			\item Define a function $d(s, a, b) = (D')_{s, b} - (D')_{s, a}$. This is the sum of distances of each of the villages at index $a+1$ to $b$ to the police station at index $s$.
+			\item Define another function $z(n, m) = min_{n-m < s <= n}{d(s, m-n, n)}$. This is the optimal solution for placing a single police station among the last $m$ of the first $n$ villages (i.e. villages indexed $n-m+1$ to $n$).
+		\end{itemize}
+		
+		\paragraph{Step 3}
+		Compute a matrix, $D$, where $(D)_{n, k}$ represents the optimal solution for placing $k$ police stations among the first $n$ villages. Perform the computation from the bottom up, by first defining $(D)_{n, 1} = z(n, n) \forall n \in [1..V]$ and performing the computation iteratively for each $k$ starting at $2$ and increasing until $P$, following the rule $(D)_{n, k} = min_{0 <= m < n}{D(n-m, k-1) + z(n, m)}$.
+		
+		\paragraph{Step 4}
+		Output $(D)_{V, P}$. This is the optimal solution to the placement of $P$ police stations among $V$ villages, and is what we originally sought to find.
+			
+	
+	\section{Correctness Proof}
+	
+	\section{Complexity Analysis}
+	
+	
+\end{document}
