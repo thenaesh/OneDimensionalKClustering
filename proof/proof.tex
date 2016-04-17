@@ -33,7 +33,7 @@
 		\paragraph{Convenience Functions}
 		\begin{itemize}
 			\item Define a function $d(s, a, b) = (D')_{s, b} - (D')_{s, a}$. This is the sum of distances of each of the villages at index $a+1$ to $b$ to the police station at index $s$. This can be seen from the fact that we simply subtract the sum of distances of each of the first $a$ villages from $s$ from the sum of distances of each of the first $b$ villages from $s$, yielding the sum of distances of each of the remaining villages ($a+1$ to $b$) from $s$.
-			\item Define another function $z(n, m) = min_{n-m < s <= n}{d(s, m-n, n)}$. This is clearly the optimal solution for placing a single police station among the last $m$ of the first $n$ villages (i.e. villages indexed $n-m+1$ to $n$), as it involves taking the minimal distance yielded by all the possible placements of the police station among the villages.
+			\item Define another function $z(n, m) = min_{n-m < s <= n}{d(s, n-m, n)}$. This is clearly the optimal solution for placing a single police station among the last $m$ of the first $n$ villages (i.e. villages indexed $n-m+1$ to $n$), as it involves taking the minimal distance yielded by all the possible placements of the police station among the villages.
 		\end{itemize}
 		
 		\paragraph{Step 3}
@@ -54,7 +54,7 @@
 		We know that $(D)_{n, 1} = z(n, n) \forall n \in [1..V]$. But $z(n, n)$ is the optimal solution for placing $1$ police station among the first $n$ villages. Therefore, $P_1$ is true.
 		
 		\paragraph{}
-		Suppose, for all $k' < k$, that $P_{k'}$ is true. Let $S = \{D(n-m) + z(n, m) : 0 <= m < n\}$. We want to show that the optimal solution to placing $k$ stations among the first $n$ villages is exactly $\min S$, which would then show that $(D)_{n, k} = \min S$ is indeed the optimal solution.
+		Suppose, for all $k' < k$, that $P_{k'}$ is true. Let $S = \{(D)_{n-m, k-1} + z(n, m) : 0 <= m < n\}$. We want to show that the optimal solution to placing $k$ stations among the first $n$ villages is exactly $\min S$, which would then show that $(D)_{n, k} = \min S$ is indeed the optimal solution.
 		
 		\paragraph{}
 		We know that every village has at least one closest police station. We define the reporting station of a village to be the \underline{closest station with the highest index}. In the event that a village has a unique closest station, that station is its reporting station.
@@ -84,11 +84,17 @@
 		\paragraph{}
 		Computing each of the $(D)_{n, 1}$ therefore takes $\Theta(V)$. Computing each of the other elements according to the recurrence earlier specified involves a $n$ memory accesses ($\Theta(V)$, as $n <= V$), $n$ calls to $z$ (likewise $\Theta(V^2)$), $n$ additions ($\Theta(V)$), costing a total of $\Theta(V^2)$. Computing an entire column, with $V$ elements, costs $\Theta(V^2)$ for the first column and $\Theta(V^3)$ for the others. As there are $P$ columns, the cost of building the entire matrix $D$ in \textbf{Step 3} is $\Theta(V^2) + \Theta(P V^3)$, which is still $\Theta(V^3)$.
 		
+		\paragraph{}
+		\textbf{Step 4} merely outputs a single value and hence runs in $\Theta(1)$.
+		
 		\paragraph{Time Complexity}
 		The time complexity of the entire algorithm is thus $\Theta(V^3)$, cubic in the number of villages, taking the number of police stations to be a constant.
 		
 		\paragraph{}
-		We see that storing the array $A$ in \textbf{Step 1} involves storing all the village positions, so $A$ uses $\Theta(V)$ space. $D'$, computed in \textbf{Step 2}, is a $V$ by $V$ matrix, so it occupies $\Theta(V^2)$ space. $D$, computed in \textbf{Step 3}, is a $V$ by $P$ matrix, and so uses $\Theta(V)$ space. All other operations maintain at most a constant amount of state (thus $\Theta(1)$ space), referencing only $A$, $D'$ and $D$ whenever necessary.
+		We see that storing the array $A$ in \textbf{Step 1} involves storing all the village positions, so $A$ uses $\Theta(V)$ space. $D'$, computed in \textbf{Step 2}, is a $V$ by $V$ matrix, so it occupies $\Theta(V^2)$ space. $D$, computed in \textbf{Step 3}, is a $V$ by $P$ matrix, and so uses $\Theta(V)$ space.
+		
+		\paragraph{}
+		All other operations maintain at most a constant amount of state, referencing only $A$, $D'$ and $D$ whenever necessary. These other operations thus use only $\Theta(1)$ space.
 		
 		\paragraph{Space Complexity}
 		The space complexity of the entire algorithm is thus $\Theta(V^2)$, quadratic in the number of villages, taking the number of police stations to be a constant.
