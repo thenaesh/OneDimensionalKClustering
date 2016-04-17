@@ -1,53 +1,163 @@
 #include <iostream>
+#include <cmath>
 
 using namespace std;
+
+const int INF = 10001;
+
 
 
 class VillageInfo
 {
-    unsigned int V; // number of villages
-    unsigned int P; // number of police stations
-    unsigned int* villagePositions;
+    int V; // number of villages
+    int P; // number of police stations
+    int* villagePositions;
 
 public:
     VillageInfo();
     virtual ~VillageInfo();
     virtual void readInput();
     virtual void computeSolution();
+	virtual int getSolution() const;
 
 private:
     /*
      * D[n][k] stores the optimal solution for placing
-     * k stations among the first n stations
+     * stations 1..k among villages 1..n
      * for k >= n, D[n][k] == 0
      */
-    unsigned int** D;
+    int** D;
+
+private:
+	void initDPTable();
+	void constructDPTable();
+	/*
+	 * get the optimal solution for placing a single station
+	 * among villages (n - m + 1)..n
+	 * i.e. the last m of the first n villages
+	 */
+	virtual int getZ(int n, int m);
+
+private:
+	void dbgPrint0();
 };
+
 
 
 int main()
 {
+	VillageInfo v;
+	v.readInput();
+	v.computeSolution();
+	cout << v.getSolution() << endl;
     return 0;
 }
 
 
+
 VillageInfo::VillageInfo()
 {
-    this->villagePositions = reinterpret_cast<unsigned int*>(0);
+    this->villagePositions = reinterpret_cast<int*>(0);
 }
+
 VillageInfo::~VillageInfo()
 {
-    if (this->villagePositions != reinterpret_cast<unsigned int*>(0))
+    if (this->villagePositions != reinterpret_cast<int*>(0))
         delete this->villagePositions;
 }
 
+
 void VillageInfo::readInput()
 {
+	// read in the number of villages and stations
     cin >> this->V >> this->P;
-    this->villagePositions = new unsigned int[this->V];
-    for (unsigned int i = 0; i < this->V; i++)
+	// initialise the village positions array
+    this->villagePositions = new int[this->V + 1];
+	// read in all the village positions
+    for (int i = 1; i <= this->V; i++)
         cin >> this->villagePositions[i];
 }
+
 void VillageInfo::computeSolution()
 {
+	this->initDPTable();
+	this->constructDPTable();
+}
+
+int VillageInfo::getSolution() const
+{
+	return this->D[this->V][this->P];
+}
+
+
+void VillageInfo::initDPTable()
+{
+	// allocate memory
+	this->D = new int*[this->V + 1];
+	for (int n = 1; n <= this->V; n++)
+		this->D[n] = new int[this->P + 1];
+	
+	// initialise values
+	for (int n = 1; n <= this->V; n++)
+		for (int k = 1; k <= this->P; k++)
+			if (k >= n)	this->D[n][k] = 0;
+			else		this->D[n][k] = INF;
+}
+
+void VillageInfo::constructDPTable()
+{
+	for (int n = 1; n <= this->V; n++)
+	{
+		D[n][1] = getZ(n, n);
+	}
+
+	for (int k = 2; k <= this->P; k++)
+	{
+		for (int n = 1; n <= this->V; n++)
+		{
+			int dist = INF;
+			for (int m = 0; m < n; m++)
+			{
+				int candidate = D[n-m][k-1] + getZ(n, m);
+				dist = (candidate < dist) ? candidate : dist;
+			}
+			D[n][k] = dist;
+		}
+	}
+	this->dbgPrint0();
+}
+
+int VillageInfo::getZ(int n, int m)
+{
+	// include start and end points
+	int startV = n - m + 1;
+	int endV = n;
+	if (startV > endV) return 0; // zero is the most sensible return value in this case
+
+	int minDistance = INF; // initially large min distance
+	for (int stnPos = startV; stnPos <= endV; stnPos++)
+	{
+		int dist = 0;
+		for (int v = startV; v <= endV; v++) dist += abs(villagePositions[v] - villagePositions[stnPos]);
+		minDistance = (dist < minDistance) ? dist : minDistance; // update the min distance for each stnPos
+	}
+
+	return minDistance;
+}
+
+
+void VillageInfo::dbgPrint0()
+{
+#ifdef DBG
+	for (int v=1; v<=V; v++) cout << villagePositions[v] << "\t";
+	cout << endl << endl;
+	for (int n=1; n<=V; n++)
+	{
+		for (int k=1; k<=P; k++)
+		{
+			cout << D[n][k] << "\t";
+		}
+		cout << endl;
+	}
+#endif
 }
